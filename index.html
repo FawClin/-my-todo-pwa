@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>My To-Do</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#365f91">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My To-Do">
+<style>
+:root{
+  --bg:#f4f6fa;--card:#fff;--text:#172033;--muted:#667085;--line:#d0d5dd;
+  --red:#dc2626;--orange:#ea580c;--yellow:#ca8a04;--green:#15803d;
+  --redbg:#fff1f2;--orangebg:#fff7ed;--yellowbg:#fefce8;--greenbg:#f0fdf4;
+  --blue:#365f91;--blue-soft:#eef4fb;--teal:#0f766e;--teal-soft:#e8f7f4;--cal-dot:#8b95a5;--h:36px
+}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;max-width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select{font:inherit}
+.app{max-width:860px;margin:auto;padding:12px 10px 82px}
+h1{font-size:25px;margin:0 0 2px}
+.sub{font-size:12px;color:var(--muted);margin-bottom:10px}
+
+/* COMPACT ENTRY */
+.entry{
+  background:#fff;border-radius:15px;padding:8px;box-shadow:0 5px 18px rgba(16,24,40,.05);
+  display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,.95fr) minmax(0,.75fr) minmax(0,1.2fr) auto;gap:6px;align-items:center
+}
+.ctrl,.add{
+  width:100%;
+  height:44px;
+  min-height:44px;
+  max-height:44px;
+  box-sizing:border-box;
+  border-radius:9px;
+  font-size:16px;
+  line-height:1;
+}
+.ctrl{
+  width:100%;
+  max-width:100%;
+  height:44px;
+  min-height:44px;
+  max-height:44px;
+  box-sizing:border-box;
+  border:1px solid var(--line);
+  background:#fff;
+  padding:0 10px;
+  outline:none;
+  line-height:44px;
+}
+select.ctrl{-webkit-appearance:menulist;appearance:auto;padding-top:0;padding-bottom:0}
+input[type="date"],input[type="time"],select.ctrl{
+  color:#365f91;
+  -webkit-text-fill-color:#365f91;
+  accent-color:#365f91;
+}
+.ctrl:focus,.picker:focus-within{border-color:#8aa5c2;box-shadow:0 0 0 3px rgba(54,95,145,.10)}
+
+
+
+.picker.empty 
+
+.add{border:0;background:#172033;color:#fff;padding:0 14px;font-weight:800;cursor:pointer}
+
+.legend{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}
+.pill{font-size:10.5px;font-weight:800;border-radius:999px;padding:5px 7px}
+.pr{background:#fee2e2;color:#991b1b}.po{background:#ffedd5;color:#9a3412}
+.py{background:#fef9c3;color:#854d0e}.pg{background:#dcfce7;color:#166534}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:7px 0}
+.count{font-size:12px;font-weight:800;color:#475467}
+.tools{display:flex;gap:5px;flex-wrap:wrap}
+.smallbtn{min-height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#344054;padding:0 9px;font-size:11px;font-weight:750;cursor:pointer}
+
+.task{
+  border-left:6px solid;border-radius:13px;padding:10px;margin-bottom:8px;box-shadow:0 4px 14px rgba(16,24,40,.05);cursor:pointer
+}
+.task.red{background:var(--redbg);border-color:var(--red)}
+.task.orange{background:var(--orangebg);border-color:var(--orange)}
+.task.yellow{background:var(--yellowbg);border-color:var(--yellow)}
+.task.green{background:var(--greenbg);border-color:var(--green)}
+.task.overdue{background:#fef2f2;border-color:#7f1d1d}
+.task.done{opacity:.55}.task.done .taskname{text-decoration:line-through}
+.tasktop{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center}
+.check{width:20px;height:20px}
+.taskname{font-weight:850;font-size:16px;overflow-wrap:anywhere}
+.meta{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.35}
+.chev{font-size:18px;color:#667085}
+
+/* EDIT: all controls same height and aligned */
+.edit{
+  display:none;
+  margin-top:9px;
+  padding-top:9px;
+  border-top:1px solid rgba(0,0,0,.08);
+  grid-template-columns:minmax(0,1.5fr) minmax(0,.8fr) minmax(0,.65fr) minmax(0,1fr) auto auto;
+  gap:6px;
+  cursor:default;
+  align-items:center;
+  width:100%;
+  max-width:100%
+}
+.edit.open{display:grid}
+.edit .ctrl{
+  width:100%;
+  max-width:100%;
+  height:34px;
+  min-height:34px;
+  max-height:34px;
+  font-size:16px;
+  border-radius:8px;
+}
+.edit-picker{
+  position:relative;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  height:34px;
+  min-height:34px;
+  max-height:34px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  padding:0 8px;
+  color:#365f91;
+}
+.edit-picker-label{
+  width:100%;
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#365f91;
+  font-size:16px;
+  line-height:1;
+}
+.edit-picker input{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  min-width:0;
+  max-width:100%;
+  margin:0;
+  padding:0;
+  border:0;
+  opacity:0;
+  font-size:16px;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.save,.delete{height:34px;border-radius:8px;padding:0 10px;font-weight:800;cursor:pointer;font-size:12.5px}
+.save{border:0;background:var(--blue);color:#fff}
+.delete{border:1px solid #c9d7e6;background:#fff;color:#365f91}
+.empty{background:#fff;border-radius:14px;padding:24px;text-align:center;color:var(--muted)}
+
+/* CALENDAR */
+.view{display:none}.view.active{display:block}
+.calbox{background:#fff;border-radius:15px;padding:9px;box-shadow:0 5px 18px rgba(16,24,40,.05)}
+.calhead{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.nav{width:36px;height:36px;border-radius:9px;border:1px solid #c7d4e2;background:#fff;color:#365f91;font-size:21px;cursor:pointer}
+.month{flex:1;text-align:center;font-size:19px;font-weight:850;color:#365f91}
+.week,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.week div{text-align:center;font-size:10.5px;font-weight:800;color:#607d9e;padding:4px 0}
+.day{
+  min-height:54px;border:0;border-radius:9px;background:transparent;padding:3px 1px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center
+}
+.day.other{opacity:.28}.day.selected{background:var(--teal-soft);outline:1px solid #8bc8c1}.day.selected .num{color:var(--teal)}.day.today.selected .num{color:#fff}
+.num{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:750;color:#365f91}
+.day.today .num{background:var(--teal);color:#fff}
+.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:8px;margin-top:2px;max-width:34px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--cal-dot)}
+.dot.red,.dot.orange,.dot.yellow,.dot.green,.dot.overdue{background:var(--cal-dot)}
+.more{font-size:8px;color:var(--muted)}
+.agenda{border-top:1px solid #eaecf0;margin-top:9px;padding-top:9px}
+.agtitle{font-size:14px;font-weight:850;margin-bottom:5px;color:#365f91}
+.agitem{display:grid;grid-template-columns:8px 1fr;gap:7px;padding:7px 0;border-bottom:1px solid #f2f4f7}
+.agitem:last-child{border-bottom:0}
+.agdot{width:7px;height:7px;border-radius:50%;margin-top:5px;background:var(--cal-dot)}
+.agdot.red,.agdot.orange,.agdot.yellow,.agdot.green,.agdot.overdue{background:var(--cal-dot)}
+.agname{font-weight:800;font-size:13.5px;color:#365f91}.agmeta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.noag{color:var(--muted);font-size:12.5px;padding:6px 0}
+
+/* BOTTOM TABS */
+.bottom{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%);
+  width:min(860px,100%);
+  min-height:58px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:center;
+  gap:8px;
+  background:rgba(255,255,255,.98);
+  border-top:1px solid #e4e7ec;
+  padding:5px 10px calc(5px + env(safe-area-inset-bottom));
+  z-index:20;
+}
+.tab{
+  border:0;
+  background:transparent;
+  border-radius:10px;
+  height:46px;
+  min-height:46px;
+  padding:3px 6px;
+  font-size:11.5px;
+  font-weight:800;
+  color:#607d9e;
+  cursor:pointer;
+}
+.tab.active{background:var(--teal-soft);color:var(--teal)}
+.tab span{display:block;font-size:17px;line-height:17px;margin-bottom:2px}
+
+
+/* iOS Safari: force date/time to exactly match the other entry controls */
+input[type="date"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: #365f91;
+  -webkit-text-fill-color: #365f91;
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 44px;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+/* WebKit's internal date/time value box must also stay fixed */
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0;
+  padding: 0;
+  line-height: 44px;
+  text-align: left;
+  color: #365f91;
+}
+
+/* Prevent hidden native sub-fields from adding extra vertical spacing */
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0;
+  padding: 0;
+  line-height: 44px;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0;
+  padding: 0;
+  line-height: 44px;
+}
+
+/* Keep the calendar/clock indicator inside the fixed box */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  margin: 0;
+  padding: 0;
+  align-self: center;
+}
+
+/* Same exact height for the neighboring controls */
+.entry .taskinput,
+.entry select,
+.entry .add {
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  line-height: 44px;
+  margin: 0;
+}
+
+@media(max-width:760px){
+  .entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .taskinput{grid-column:1/-1}
+  .repeat{grid-column:1}
+  .add{grid-column:2}
+  .edit.open{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .ename,.repeatEdit{grid-column:1/-1}
+}
+@media(max-width:430px){
+  :root{--h:44px}
+
+  html,body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  .app{
+    width:100%;
+    max-width:100%;
+    padding:9px 8px calc(66px + env(safe-area-inset-bottom));
+    overflow-x:hidden;
+  }
+
+  input,select,button{font-size:16px}
+
+  .entry{
+    width:100%;
+    max-width:100%;
+    padding:7px;
+    gap:6px;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    overflow:hidden;
+  }
+  .taskinput{grid-column:1/-1}
+  .repeat{grid-column:1}
+  .add{grid-column:2}
+
+  .ctrl,.add{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    height:36px;
+    min-height:36px;
+    max-height:36px;
+  }
+  
+
+  .toolbar{
+    width:100%;
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .tools{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:5px;
+  }
+  .smallbtn{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    height:34px;
+    min-height:34px;
+    padding:0 4px;
+    white-space:nowrap;
+    font-size:11px;
+  }
+
+  .task{
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+  }
+  .tasktop{
+    width:100%;
+    grid-template-columns:auto minmax(0,1fr) auto;
+  }
+
+  .edit.open{
+    width:100%;
+    max-width:100%;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:6px;
+    overflow:hidden;
+  }
+  .edit .ename{grid-column:1/-1;width:100%}
+  .edit-picker{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    height:34px;
+    min-height:34px;
+    max-height:34px;
+  }
+  .edit .repeatEdit{grid-column:1/-1;width:100%}
+  .edit .ctrl{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    height:34px;
+    min-height:34px;
+    max-height:34px;
+    font-size:16px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .save,.delete{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    height:34px;
+    font-size:13px;
+  }
+
+  .calbox{
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+  }
+  .week,.grid{
+    width:100%;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+  }
+  .day{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    min-height:50px;
+  }
+
+  .bottom{
+    width:100%;
+    min-height:58px;
+    padding:5px 8px calc(5px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ===== Evisionsoft 1-second launch splash =====
+   The To-Do app renders normally underneath this fixed overlay. */
+.ev-launch-splash{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 36%,rgba(84,182,227,.10),transparent 30%),
+    linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+  animation:evSplashOut .14s ease .86s forwards;
+  pointer-events:auto;
+}
+.ev-rain{position:absolute;inset:0;pointer-events:none}
+.ev-drop{
+  position:absolute;
+  top:-25%;
+  width:3px;
+  height:82px;
+  border-radius:999px;
+  opacity:0;
+  background:linear-gradient(to bottom,rgba(88,185,230,0),rgba(65,160,210,.95));
+  animation:evFall .82s linear forwards;
+}
+.ev-d1{left:16%;animation-delay:.00s}
+.ev-d2{left:25%;animation-delay:.05s}
+.ev-d3{left:36%;animation-delay:.02s}
+.ev-d4{left:47%;animation-delay:.08s}
+.ev-d5{left:58%;animation-delay:.03s}
+.ev-d6{left:68%;animation-delay:.10s}
+.ev-d7{left:79%;animation-delay:.06s}
+.ev-d8{left:87%;animation-delay:.01s}
+.ev-logo-wrap{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:min(84%,332px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  opacity:0;
+  transform:translate(-50%,-57%) scale(.97);
+  animation:evLogoIn .28s cubic-bezier(.2,.85,.2,1) .04s forwards;
+}
+.ev-mark-img{
+  width:84px;
+  height:84px;
+  flex:0 0 auto;
+  object-fit:contain;
+  background:transparent;
+  border:0;
+  outline:0;
+  box-shadow:none;
+  filter:drop-shadow(0 8px 18px rgba(20,105,160,.08));
+}
+.ev-word{
+  font-size:37px;
+  line-height:1;
+  font-weight:760;
+  letter-spacing:-1.4px;
+  color:#0c3f66;
+  opacity:0;
+  transform:translateX(10px);
+  animation:evWordIn .24s ease-out .24s forwards;
+  -webkit-font-smoothing:antialiased;
+}
+.ev-shine{
+  position:absolute;
+  top:28%;
+  bottom:28%;
+  left:-36%;
+  width:26%;
+  opacity:0;
+  pointer-events:none;
+  transform:skewX(-20deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+  animation:evShine .38s ease .40s forwards;
+}
+@keyframes evLogoIn{to{opacity:1;transform:translate(-50%,-52%) scale(1)}}
+@keyframes evWordIn{to{opacity:1;transform:translateX(0)}}
+@keyframes evShine{
+  0%{left:-36%;opacity:0}
+  22%{opacity:1}
+  100%{left:114%;opacity:0}
+}
+@keyframes evFall{
+  0%{opacity:0;transform:translateY(0)}
+  8%{opacity:.82}
+  100%{opacity:0;transform:translateY(760px)}
+}
+@keyframes evSplashOut{to{opacity:0;visibility:hidden;pointer-events:none}}
+@media(max-width:390px){
+  .ev-mark-img{width:72px;height:72px}
+  .ev-word{font-size:31px}
+  .ev-logo-wrap{gap:10px}
+}
+
+</style>
+</head>
+<body>
+
+<div class="ev-launch-splash" id="evLaunchSplash" aria-hidden="true">
+  <div class="ev-rain">
+    <span class="ev-drop ev-d1"></span><span class="ev-drop ev-d2"></span>
+    <span class="ev-drop ev-d3"></span><span class="ev-drop ev-d4"></span>
+    <span class="ev-drop ev-d5"></span><span class="ev-drop ev-d6"></span>
+    <span class="ev-drop ev-d7"></span><span class="ev-drop ev-d8"></span>
+  </div>
+  <div class="ev-logo-wrap">
+    <img class="ev-mark-img" src="./evisionsoft-logo.png" alt="">
+    <div class="ev-word">evisionsoft</div>
+    <div class="ev-shine"></div>
+  </div>
+</div>
+
+
+<div class="app">
+  <h1>My To-Do</h1>
+  <div class="sub">Compact tasks and local calendar</div>
+
+  <section id="tasksView" class="view active">
+    <div class="entry">
+      <input id="taskInput" class="ctrl taskinput" type="text" placeholder="Enter a task">
+
+      <input id="dateInput" class="ctrl date-time-native" type="date" aria-label="Date">
+      <input id="timeInput" class="ctrl date-time-native" type="time" aria-label="Time">
+
+      <select id="repeatInput" class="ctrl repeat" aria-label="Repeat">
+        <option value="none">Does not repeat</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="fortnightly">Every 2 weeks</option>
+        <option value="monthly">Monthly</option>
+        <option value="two_monthly">Every 2 months</option>
+        <option value="quarterly">Quarterly</option>
+        <option value="six_monthly">Every 6 months</option>
+        <option value="yearly">Yearly</option>
+      </select>
+
+      <button id="addBtn" class="add" type="button">Add</button>
+    </div>
+
+    <div class="legend">
+      <span class="pill pr">🔴 Today</span>
+      <span class="pill po">🟠 ≤ 7 days</span>
+      <span class="pill py">🟡 8–30 days</span>
+      <span class="pill pg">🟢 &gt; 30 days</span>
+    </div>
+
+    <div class="toolbar">
+      <div id="count" class="count"></div>
+      <div class="tools">
+        <button id="importBtn" class="smallbtn" type="button">Import JSON</button>
+        <input id="importFile" type="file" accept=".json,application/json" hidden>
+        <button id="exportBtn" class="smallbtn" type="button">Export JSON</button>
+        <button id="clearBtn" class="smallbtn" type="button">Clear Completed</button>
+      </div>
+    </div>
+
+    <div id="taskList"></div>
+  </section>
+
+  <section id="calendarView" class="view">
+    <div class="calbox">
+      <div class="calhead">
+        <button id="prevMonth" class="nav" type="button" aria-label="Previous month">‹</button>
+        <div id="monthTitle" class="month"></div>
+        <button id="nextMonth" class="nav" type="button" aria-label="Next month">›</button>
+      </div>
+
+      <div class="week">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+
+      <div id="calendarGrid" class="grid"></div>
+
+      <div class="agenda">
+        <div id="agendaTitle" class="agtitle"></div>
+        <div id="agendaList"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<nav class="bottom">
+  <button id="tasksTab" class="tab active" type="button"><span>✓</span>Tasks</button>
+  <button id="calendarTab" class="tab" type="button"><span>▦</span>Calendar</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+
+const STORAGE_KEY="myTodoPWA_v1";
+
+/* Never rely on element IDs becoming global JS variables */
+const el={
+  tasksView:document.getElementById("tasksView"),
+  calendarView:document.getElementById("calendarView"),
+  tasksTab:document.getElementById("tasksTab"),
+  calendarTab:document.getElementById("calendarTab"),
+  taskInput:document.getElementById("taskInput"),
+  dateInput:document.getElementById("dateInput"),
+  timeInput:document.getElementById("timeInput"),
+  repeatInput:document.getElementById("repeatInput"),
+  addBtn:document.getElementById("addBtn"),
+  count:document.getElementById("count"),
+  taskList:document.getElementById("taskList"),
+  importBtn:document.getElementById("importBtn"),
+  importFile:document.getElementById("importFile"),
+  exportBtn:document.getElementById("exportBtn"),
+  clearBtn:document.getElementById("clearBtn"),
+  prevMonth:document.getElementById("prevMonth"),
+  nextMonth:document.getElementById("nextMonth"),
+  monthTitle:document.getElementById("monthTitle"),
+  calendarGrid:document.getElementById("calendarGrid"),
+  agendaTitle:document.getElementById("agendaTitle"),
+  agendaList:document.getElementById("agendaList")
+};
+
+function pad(n){return String(n).padStart(2,"0")}
+function dateString(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function today(){return dateString(new Date())}
+function parseDate(s){
+  const parts=String(s).split("-").map(Number);
+  return new Date(parts[0],parts[1]-1,parts[2]);
+}
+function esc(s){
+  const d=document.createElement("div");
+  d.textContent=String(s??"");
+  return d.innerHTML;
+}
+function validDateString(s){return /^\d{4}-\d{2}-\d{2}$/.test(String(s||""))}
+
+let tasks=[];
+try{
+  const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+  if(Array.isArray(saved)) tasks=saved;
+}catch(err){
+  console.warn("Could not read saved tasks",err);
+}
+
+function normalizeTask(t,i){
+  return{
+    id:Number(t.id)||Date.now()+i+Math.floor(Math.random()*1000),
+    name:String(t.name||t.task||"Untitled task"),
+    date:validDateString(t.date||t.due_date)?(t.date||t.due_date):today(),
+    time:String(t.time||t.due_time||""),
+    repeat:String(t.repeat||t.recurrence||"none"),
+    done:Boolean(t.done||t.completed)
+  };
+}
+tasks=tasks.map(normalizeTask);
+
+function save(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(tasks))}
+  catch(err){console.warn("Could not save tasks",err)}
+}
+
+function updateEntryPickerLabels(){}
+
+function daysAway(s){return Math.round((parseDate(s)-parseDate(today()))/86400000)}
+function colorFor(s){
+  const n=daysAway(s);
+  if(n<0)return"overdue";
+  if(n===0)return"red";
+  if(n<=7)return"orange";
+  if(n<=30)return"yellow";
+  return"green";
+}
+function statusFor(s){
+  const n=daysAway(s);
+  if(n<0)return`${Math.abs(n)} day${Math.abs(n)===1?"":"s"} overdue`;
+  if(n===0)return"DUE TODAY";
+  if(n===1)return"Tomorrow";
+  return`Due in ${n} days`;
+}
+function repeatLabel(r){
+  const labels={
+    none:"Does not repeat",daily:"Daily",weekly:"Weekly",fortnightly:"Every 2 weeks",
+    monthly:"Monthly",two_monthly:"Every 2 months",quarterly:"Quarterly",
+    six_monthly:"Every 6 months",yearly:"Yearly"
+  };
+  return labels[r]||"Does not repeat";
+}
+function dateLabel(s){
+  return parseDate(s).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+}
+function timeLabel(t){
+  if(!t)return"No time";
+  const p=t.split(":").map(Number);
+  return new Date(2000,0,1,p[0],p[1]).toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+}
+function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
+function addMonths(dateStr,n){
+  const d=parseDate(dateStr),day=d.getDate(),total=d.getMonth()+n;
+  const y=d.getFullYear()+Math.floor(total/12);
+  const m=((total%12)+12)%12;
+  return dateString(new Date(y,m,Math.min(day,daysInMonth(y,m))));
+}
+function nextOccurrence(dateStr,r){
+  const d=parseDate(dateStr);
+  if(r==="daily"){d.setDate(d.getDate()+1);return dateString(d)}
+  if(r==="weekly"){d.setDate(d.getDate()+7);return dateString(d)}
+  if(r==="fortnightly"){d.setDate(d.getDate()+14);return dateString(d)}
+  if(r==="monthly")return addMonths(dateStr,1);
+  if(r==="two_monthly")return addMonths(dateStr,2);
+  if(r==="quarterly")return addMonths(dateStr,3);
+  if(r==="six_monthly")return addMonths(dateStr,6);
+  if(r==="yearly")return addMonths(dateStr,12);
+  return dateStr;
+}
+function nextFuture(dateStr,r){
+  let n=nextOccurrence(dateStr,r),guard=0;
+  while(n<today()&&guard<1200){
+    n=nextOccurrence(n,r);
+    guard++;
+  }
+  return n;
+}
+
+function repeatOptions(cur){
+  const opts=[
+    ["none","Does not repeat"],["daily","Daily"],["weekly","Weekly"],["fortnightly","Every 2 weeks"],
+    ["monthly","Monthly"],["two_monthly","Every 2 months"],["quarterly","Quarterly"],
+    ["six_monthly","Every 6 months"],["yearly","Yearly"]
+  ];
+  return opts.map(([v,l])=>`<option value="${v}" ${v===cur?"selected":""}>${l}</option>`).join("");
+}
+
+function addTask(){
+  const name=el.taskInput.value.trim();
+  const date=el.dateInput.value;
+  const time=el.timeInput.value;
+  const repeat=el.repeatInput.value;
+  if(!name||!date){alert("Enter a task and choose a date.");return}
+  tasks.push({id:Date.now(),name,date,time,repeat,done:false});
+  save();
+  el.taskInput.value="";
+  el.dateInput.value="";
+  el.timeInput.value="";
+  el.repeatInput.value="none";
+  updateEntryPickerLabels();
+  renderAll();
+}
+
+function renderTasks(){
+  const active=tasks.filter(t=>!t.done).length;
+  el.count.textContent=`${active} active task${active===1?"":"s"}`;
+
+  if(tasks.length===0){
+    el.taskList.innerHTML='<div class="empty">No tasks yet.</div>';
+    return;
+  }
+
+  const sorted=[...tasks].sort((a,b)=>
+    Number(a.done)-Number(b.done)||
+    a.date.localeCompare(b.date)||
+    (a.time||"99:99").localeCompare(b.time||"99:99")
+  );
+
+  el.taskList.innerHTML=sorted.map(t=>`
+    <div class="task ${colorFor(t.date)} ${t.done?"done":""}" data-task-id="${t.id}">
+      <div class="tasktop">
+        <input class="check js-complete" data-id="${t.id}" type="checkbox" ${t.done?"checked":""}>
+        <div>
+          <div class="taskname">${esc(t.name)}</div>
+          <div class="meta">${dateLabel(t.date)} · ${timeLabel(t.time)} · <b>${statusFor(t.date)}</b>${t.repeat!=="none"?` · ↻ ${repeatLabel(t.repeat)}`:""}</div>
+        </div>
+        <div class="chev" id="chev-${t.id}">⌄</div>
+      </div>
+
+      <div class="edit" id="edit-${t.id}">
+        <input id="n-${t.id}" class="ctrl ename" value="${esc(t.name)}">
+        <div class="edit-picker">
+          <span id="dl-${t.id}" class="edit-picker-label">${dateLabel(t.date)}</span>
+          <input id="d-${t.id}" class="js-edit-date" data-id="${t.id}" type="date" value="${t.date}" aria-label="Task date">
+        </div>
+        <div class="edit-picker">
+          <span id="tl-${t.id}" class="edit-picker-label">${t.time?timeLabel(t.time):"Time"}</span>
+          <input id="tm-${t.id}" class="js-edit-time" data-id="${t.id}" type="time" value="${t.time||""}" aria-label="Task time">
+        </div>
+        <select id="r-${t.id}" class="ctrl repeatEdit">${repeatOptions(t.repeat)}</select>
+        <button class="save js-save" data-id="${t.id}" type="button">Save</button>
+        <button class="delete js-delete" data-id="${t.id}" type="button">Delete</button>
+      </div>
+    </div>`).join("");
+
+  el.taskList.querySelectorAll(".task").forEach(card=>{
+    card.addEventListener("click",e=>{
+      if(e.target.closest(".edit")||e.target.classList.contains("js-complete"))return;
+      const id=card.dataset.taskId;
+      const panel=document.getElementById("edit-"+id);
+      const chev=document.getElementById("chev-"+id);
+      panel.classList.toggle("open");
+      chev.textContent=panel.classList.contains("open")?"⌃":"⌄";
+    });
+  });
+
+  el.taskList.querySelectorAll(".js-complete").forEach(box=>{
+    box.addEventListener("click",e=>{
+      e.stopPropagation();
+      const id=Number(box.dataset.id);
+      const t=tasks.find(x=>x.id===id);
+      if(!t)return;
+      if(!t.done&&t.repeat!=="none"){
+        t.date=nextFuture(t.date,t.repeat);
+        t.done=false;
+      }else{
+        t.done=!t.done;
+      }
+      save();renderAll();
+    });
+  });
+
+  el.taskList.querySelectorAll(".js-edit-date").forEach(inp=>{
+    inp.addEventListener("change",e=>{
+      e.stopPropagation();
+      const lab=document.getElementById("dl-"+inp.dataset.id);
+      if(lab)lab.textContent=inp.value?dateLabel(inp.value):"Date";
+    });
+  });
+
+  el.taskList.querySelectorAll(".js-edit-time").forEach(inp=>{
+    inp.addEventListener("change",e=>{
+      e.stopPropagation();
+      const lab=document.getElementById("tl-"+inp.dataset.id);
+      if(lab)lab.textContent=inp.value?timeLabel(inp.value):"Time";
+    });
+  });
+
+  el.taskList.querySelectorAll(".js-save").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      e.stopPropagation();
+      const id=Number(btn.dataset.id),t=tasks.find(x=>x.id===id);
+      if(!t)return;
+      const name=document.getElementById("n-"+id).value.trim();
+      const date=document.getElementById("d-"+id).value;
+      if(!name||!date){alert("Task name and date are required.");return}
+      t.name=name;
+      t.date=date;
+      t.time=document.getElementById("tm-"+id).value;
+      t.repeat=document.getElementById("r-"+id).value;
+      save();renderAll();
+    });
+  });
+
+  el.taskList.querySelectorAll(".js-delete").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      e.stopPropagation();
+      const id=Number(btn.dataset.id);
+      if(confirm("Delete this task?")){
+        tasks=tasks.filter(x=>x.id!==id);
+        save();renderAll();
+      }
+    });
+  });
+}
+
+/* Calendar includes future recurring occurrences */
+function occurrenceDatesForTask(t,startStr,endStr){
+  const out=[];
+  if(t.done)return out;
+  let cur=t.date;
+
+  if(t.repeat==="none"){
+    if(cur>=startStr&&cur<=endStr)out.push(cur);
+    return out;
+  }
+
+  let guard=0;
+  while(cur<startStr&&guard<1600){
+    cur=nextOccurrence(cur,t.repeat);
+    guard++;
+  }
+  while(cur<=endStr&&guard<1800){
+    if(cur>=startStr)out.push(cur);
+    cur=nextOccurrence(cur,t.repeat);
+    guard++;
+  }
+  return out;
+}
+function occurrencesBetween(startStr,endStr){
+  const map={};
+  tasks.forEach(t=>{
+    occurrenceDatesForTask(t,startStr,endStr).forEach(d=>{
+      if(!map[d])map[d]=[];
+      map[d].push({...t,occurrenceDate:d});
+    });
+  });
+  return map;
+}
+
+let cursor=new Date();
+cursor=new Date(cursor.getFullYear(),cursor.getMonth(),1);
+let selected=today();
+
+function renderCalendar(){
+  const y=cursor.getFullYear(),m=cursor.getMonth();
+  el.monthTitle.textContent=new Date(y,m,1).toLocaleDateString(undefined,{month:"long",year:"numeric"});
+
+  const first=new Date(y,m,1);
+  const start=new Date(y,m,1-first.getDay());
+  const end=new Date(start);
+  end.setDate(start.getDate()+41);
+  const occ=occurrencesBetween(dateString(start),dateString(end));
+
+  let html="";
+  for(let i=0;i<42;i++){
+    const d=new Date(start);
+    d.setDate(start.getDate()+i);
+    const s=dateString(d),items=occ[s]||[];
+    const dots=items.slice(0,4).map(()=>`<span class="dot ${colorFor(s)}"></span>`).join("");
+
+    html+=`
+      <button type="button" class="day ${d.getMonth()!==m?"other":""} ${s===today()?"today":""} ${s===selected?"selected":""}" data-date="${s}">
+        <span class="num">${d.getDate()}</span>
+        <span class="dots">${dots}${items.length>4?`<span class="more">+${items.length-4}</span>`:""}</span>
+      </button>`;
+  }
+
+  el.calendarGrid.innerHTML=html;
+
+  el.calendarGrid.querySelectorAll(".day").forEach(day=>{
+    day.addEventListener("click",()=>{
+      selected=day.dataset.date;
+      const d=parseDate(selected);
+      if(d.getMonth()!==cursor.getMonth()||d.getFullYear()!==cursor.getFullYear()){
+        cursor=new Date(d.getFullYear(),d.getMonth(),1);
+      }
+      renderCalendar();
+    });
+  });
+
+  renderAgenda();
+}
+
+function renderAgenda(){
+  el.agendaTitle.textContent=parseDate(selected).toLocaleDateString(undefined,{
+    weekday:"long",day:"numeric",month:"long",year:"numeric"
+  });
+
+  const occ=(occurrencesBetween(selected,selected)[selected]||[])
+    .sort((a,b)=>(a.time||"99:99").localeCompare(b.time||"99:99"));
+
+  if(occ.length===0){
+    el.agendaList.innerHTML='<div class="noag">No tasks scheduled for this date.</div>';
+    return;
+  }
+
+  el.agendaList.innerHTML=occ.map(t=>`
+    <div class="agitem">
+      <span class="agdot ${colorFor(selected)}"></span>
+      <div>
+        <div class="agname">${esc(t.name)}</div>
+        <div class="agmeta">${timeLabel(t.time)}${t.repeat!=="none"?` · ↻ ${repeatLabel(t.repeat)}`:""}</div>
+      </div>
+    </div>`).join("");
+}
+
+function showView(name){
+  const isCalendar=name==="calendar";
+  el.tasksView.classList.toggle("active",!isCalendar);
+  el.calendarView.classList.toggle("active",isCalendar);
+  el.tasksTab.classList.toggle("active",!isCalendar);
+  el.calendarTab.classList.toggle("active",isCalendar);
+  if(isCalendar)renderCalendar();
+}
+
+function exportJSON(){
+  const payload={version:7,exportedAt:new Date().toISOString(),tasks};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`my-todo-backup-${today()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(file){
+  const reader=new FileReader();
+  reader.onload=function(){
+    try{
+      const parsed=JSON.parse(reader.result);
+      const arr=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.tasks)?parsed.tasks:null);
+      if(!arr)throw new Error("No task array found");
+      const normalized=arr.map(normalizeTask);
+      if(!confirm(`Import ${normalized.length} task(s)? This will replace the current list.`))return;
+      tasks=normalized;
+      save();
+      renderAll();
+      alert("JSON imported successfully.");
+    }catch(err){
+      alert("Could not import this JSON file. Please use a task backup JSON.");
+    }
+  };
+  reader.onerror=function(){alert("Could not read the selected file.");};
+  reader.readAsText(file);
+}
+
+function renderAll(){
+  renderTasks();
+  renderCalendar();
+}
+
+/* Explicit event wiring */
+el.dateInput.addEventListener("change",updateEntryPickerLabels);
+el.timeInput.addEventListener("change",updateEntryPickerLabels);
+el.addBtn.addEventListener("click",addTask);
+el.taskInput.addEventListener("keydown",e=>{if(e.key==="Enter")addTask()});
+
+el.tasksTab.addEventListener("click",()=>showView("tasks"));
+el.calendarTab.addEventListener("click",()=>showView("calendar"));
+
+el.prevMonth.addEventListener("click",()=>{
+  cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);
+  renderCalendar();
+});
+el.nextMonth.addEventListener("click",()=>{
+  cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);
+  renderCalendar();
+});
+
+el.clearBtn.addEventListener("click",()=>{
+  tasks=tasks.filter(t=>!t.done);
+  save();renderAll();
+});
+
+el.exportBtn.addEventListener("click",exportJSON);
+
+el.importBtn.addEventListener("click",()=>{
+  el.importFile.value="";
+  el.importFile.click();
+});
+el.importFile.addEventListener("change",()=>{
+  const file=el.importFile.files&&el.importFile.files[0];
+  if(file)importJSON(file);
+});
+
+updateEntryPickerLabels();
+save();
+renderAll();
+
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./service-worker.js").catch(function (err) {
+      console.warn("Service worker registration failed:", err);
+    });
+  });
+}
+</script>
+
+
+<script>
+(function () {
+  const splash = document.getElementById("evLaunchSplash");
+  if (!splash) return;
+  window.setTimeout(function () {
+    splash.remove();
+  }, 1100);
+})();
+</script>
+
+</body>
+</html>
